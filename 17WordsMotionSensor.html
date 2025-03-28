@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Random 17-Letter Words (Audio Only)</title>
+  <style>
+    /* Optionally, style the page as needed. No word display element is used now. */
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 50px;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    // Array of 17 real 17-letter English words
+    var realWords = [
+      "indistinguishable",
+      "unconventionality",
+      "counterproductive",
+      "misinterpretation",
+      "uncontrollability",
+      "institutionalized",
+      "electrocardiogram",
+      "misrepresentation",
+      "unintelligibility",
+      "counterrevolution",
+      "characterizations",
+      "microarchitecture",
+      "uncomplicatedness",
+      "revolutionariness",
+      "unprofessionalism",
+      "incompatibilities",
+      "unconventionalism"
+    ];
+
+    // Generate a fictional 17-letter word that looks more like an actual word.
+    function generateFictionalWord() {
+      if (Math.random() < 0.5) {
+        // Method 1: Alternating vowels and consonants for a more pronounceable word.
+        var vowels = "aeiou";
+        var consonants = "bcdfghjklmnpqrstvwxyz";
+        var word = "";
+        var startWithConsonant = Math.random() < 0.5;
+        for (var i = 0; i < 17; i++) {
+          if ((startWithConsonant && i % 2 === 0) || (!startWithConsonant && i % 2 !== 0)) {
+            word += consonants.charAt(Math.floor(Math.random() * consonants.length));
+          } else {
+            word += vowels.charAt(Math.floor(Math.random() * vowels.length));
+          }
+        }
+        return word;
+      } else {
+        // Method 2: Combine common syllable fragments.
+        var syllables = ["con", "pre", "sub", "re", "trans", "un", "in", "tion", "ment", "able", "ing", "ly", "est", "ive", "ver", "nat", "sim", "al", "or", "ist"];
+        var word = "";
+        while (word.length < 17) {
+          var syl = syllables[Math.floor(Math.random() * syllables.length)];
+          word += syl;
+        }
+        // Ensure the word is exactly 17 letters.
+        return word.substr(0, 17);
+      }
+    }
+
+    // Randomly choose a real word or a fictional word.
+    function getRandomWord() {
+      if (Math.random() < 0.5) {
+        var index = Math.floor(Math.random() * realWords.length);
+        return realWords[index];
+      } else {
+        return generateFictionalWord();
+      }
+    }
+
+    // Load available voices.
+    var voices = [];
+    function loadVoices() {
+      voices = window.speechSynthesis.getVoices();
+    }
+    loadVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    // Speak the given word using a randomly selected American or British English voice.
+    function speakWord(word) {
+      var msg = new SpeechSynthesisUtterance(word);
+      var englishVoices = voices.filter(function(voice) {
+        return voice.lang === 'en-US' || voice.lang === 'en-GB';
+      });
+      if (englishVoices.length > 0) {
+        msg.voice = englishVoices[Math.floor(Math.random() * englishVoices.length)];
+      }
+      window.speechSynthesis.speak(msg);
+    }
+
+    // Speak a random word every 5 seconds without displaying it.
+    function updateWord() {
+      var word = getRandomWord();
+      speakWord(word);
+    }
+
+    // Start immediately and then update every 5 seconds.
+    updateWord();
+    setInterval(updateWord, 5000);
+  </script>
+</body>
+</html>

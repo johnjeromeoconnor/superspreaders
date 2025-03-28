@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Conspiracy Generator</title>
+    <style>
+        body, html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: black;
+            color: #00FF00;
+        }
+        #content {
+            text-align: center;
+        }
+        canvas {
+            display: block;
+            margin: 20px auto;
+            border: 1px solid #00FF00;
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        #thinking {
+            animation: blink 1s infinite;
+        }
+        #recent-conspiracy {
+            font-size: 1.5em;
+            color: white;
+            background-color: black;
+            border: 2px solid white;
+            padding: 10px;
+            display: inline-block;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="content">
+        <p id="conspiracy"></p>
+        <canvas id="drawing" width="300" height="300"></canvas>
+        <p id="thinking">thinking...</p>
+        <p id="recent-conspiracy"></p>
+    </div>
+    <script>
+        const colors = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF", "#FFFFFF", "#000000"];
+        let cumulativeConspiracy = "";
+
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function generateRandomConspiracy() {
+            const subjects = ["moon", "birds", "pineapples", "internet", "clouds", "bananas", "cats", "trees", "mountains", "oceans", "stars", "bacteria", "windmills", "robots", "sand dunes"];
+            const actions = [
+                "are holograms", "are drones for surveillance", "transmit alien messages", "are a simulation", "broadcast subliminal messages", 
+                "control our minds", "are spying on us", "communicate with aliens", "are portals to another dimension", "contain hidden messages", 
+                "are ancient artifacts", "manipulate time", "generate secret codes", "emit mind-control frequencies", "are alive and observing us", 
+                "influence elections", "spread propaganda", "are used for mind control", "were created to distract from political corruption", "are manipulated by powerful political elites"
+            ];
+            const entities = [
+                "the government", "aliens", "ancient civilizations", "secret societies", "the internet", 
+                "multinational corporations", "the Illuminati", "time travelers", "artificial intelligence", "extraterrestrial beings", 
+                "political parties", "the deep state", "the shadow government", "the military-industrial complex", "wealthy donors"
+            ];
+
+            const subject = subjects[randomInt(0, subjects.length - 1)];
+            const action = actions[randomInt(0, actions.length - 1)];
+            const entity = entities[randomInt(0, entities.length - 1)];
+
+            return `the ${subject} ${action} because ${entity}`;
+        }
+
+        function speakConspiracy(conspiracy) {
+            const utterance = new SpeechSynthesisUtterance(conspiracy);
+            const voices = window.speechSynthesis.getVoices().filter(voice => voice.lang.includes("en-US"));
+            if (voices.length > 0) {
+                utterance.voice = voices[randomInt(0, voices.length - 1)];
+            }
+            utterance.rate = Math.random() * 1.5 + 0.5; // Random rate between 0.5 and 2
+            utterance.pitch = Math.random() * 2; // Random pitch between 0 and 2
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function drawOccultSymbol() {
+            const canvas = document.getElementById("drawing");
+            const ctx = canvas.getContext("2d");
+            ctx.globalAlpha = 0.5; // Make previous shapes transparent
+
+            const symbols = [
+                function () {
+                    ctx.beginPath();
+                    ctx.arc(150, 150, randomInt(40, 140), 0, Math.PI * 2);
+                    ctx.moveTo(150, randomInt(20, 280));
+                    ctx.lineTo(randomInt(60, 240), randomInt(20, 280));
+                    ctx.lineTo(randomInt(60, 240), randomInt(20, 280));
+                    ctx.closePath();
+                    ctx.stroke();
+                },
+                function () {
+                    ctx.beginPath();
+                    for (let i = 0; i < 7; i++) {
+                        ctx.lineTo(randomInt(20, 280), randomInt(20, 280));
+                    }
+                    ctx.closePath();
+                    ctx.stroke();
+                },
+                function () {
+                    ctx.beginPath();
+                    ctx.arc(150, 150, randomInt(40, 140), 0, Math.PI * 2);
+                    ctx.moveTo(150, 50);
+                    ctx.lineTo(150, 250);
+                    ctx.moveTo(50, 150);
+                    ctx.lineTo(250, 150);
+                    ctx.moveTo(100, 100);
+                    ctx.lineTo(200, 200);
+                    ctx.moveTo(200, 100);
+                    ctx.lineTo(100, 200);
+                    ctx.stroke();
+                },
+                function () {
+                    ctx.beginPath();
+                    ctx.moveTo(150, 20);
+                    ctx.lineTo(randomInt(200, 280), randomInt(200, 280));
+                    ctx.lineTo(randomInt(20, 100), randomInt(200, 280));
+                    ctx.closePath();
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(150, 150, randomInt(20, 80), 0, Math.PI * 2);
+                    ctx.stroke();
+                },
+                function () {
+                    ctx.beginPath();
+                    ctx.arc(150, 150, randomInt(40, 140), 0, Math.PI * 2);
+                    ctx.moveTo(150, 150);
+                    ctx.lineTo(150, randomInt(20, 280));
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(150, 150, randomInt(20, 60), 0, Math.PI);
+                    ctx.stroke();
+                }
+            ];
+
+            // Ensure shape color is different from background
+            let shapeColor;
+            do {
+                shapeColor = colors[randomInt(0, colors.length - 1)];
+            } while (shapeColor === document.body.style.backgroundColor);
+
+            ctx.strokeStyle = shapeColor;
+            ctx.lineWidth = 3;
+            symbols[randomInt(0, symbols.length - 1)]();
+        }
+
+        function generateConspiracy() {
+            const newConspiracy = generateRandomConspiracy();
+            cumulativeConspiracy += (cumulativeConspiracy ? ' because ' + newConspiracy : newConspiracy);
+            document.getElementById("conspiracy").textContent = cumulativeConspiracy;
+            document.getElementById("recent-conspiracy").textContent = newConspiracy;
+
+            // Ensure text color is different from background
+            let textColor;
+            do {
+                textColor = colors[randomInt(0, colors.length - 1)];
+            } while (textColor === document.body.style.backgroundColor);
+            document.getElementById("conspiracy").style.color = textColor;
+
+            document.body.style.backgroundColor = colors[randomInt(0, colors.length - 1)];
+            speakConspiracy(cumulativeConspiracy);
+        }
+
+        function loop() {
+            generateConspiracy();
+            drawOccultSymbol();
+            setTimeout(() => {
+                document.getElementById("thinking").textContent = "thinking...";
+                drawOccultSymbol();
+                setTimeout(loop, randomInt(1000, 10000));
+            }, randomInt(5000, 10000));
+        }
+
+        window.onload = function() {
+            if (window.speechSynthesis.getVoices().length !== 0) {
+                loop();
+            } else {
+                window.speechSynthesis.onvoiceschanged = () => {
+                    loop();
+                };
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            overflow: hidden;
+        }
+
+        #diagram {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background-color: #fff;
+        }
+
+        .node {
+            fill: #d35400;
+            stroke: #e74c3c;
+            stroke-width: 1.5px;
+            cursor: pointer;
+        }
+
+        .link {
+            stroke: #7f8c8d;
+            stroke-width: 1.5px;
+        }
+
+        .node.blink {
+            animation: blink-animation 1s infinite;
+        }
+
+        @keyframes blink-animation {
+            0% {
+                fill: #d35400;
+            }
+            50% {
+                fill: #3498db;
+            }
+            100% {
+                fill: #d35400;
+            }
+        }
+
+        text {
+            font-size: 8px;
+            text-anchor: middle;
+            fill: #2c3e50;
+        }
+
+        #formula {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 14px;
+            color: #444;
+            font-family: 'Courier New', Courier, monospace;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="formula">Calculating...</div>
+    <svg id="diagram"></svg>
+
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script>
+        const svg = d3.select("#diagram")
+            .attr("width", window.innerWidth)
+            .attr("height", window.innerHeight);
+
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        const drumSounds = [
+    "https://s3.amazonaws.com/freecodecamp/drums/Heater-1.mp3", // Tom
+    "https://s3.amazonaws.com/freecodecamp/drums/Heater-2.mp3", // Snare
+    "https://s3.amazonaws.com/freecodecamp/drums/Heater-3.mp3", // Bass Drum
+    "https://s3.amazonaws.com/freecodecamp/drums/Heater-4_1.mp3", // Cymbal
+    "https://s3.amazonaws.com/freecodecamp/drums/Heater-6.mp3", // Hi-hat
+    "https://s3.amazonaws.com/freecodecamp/drums/Dsc_Oh.mp3",   // Open Hi-hat
+    "https://s3.amazonaws.com/freecodecamp/drums/Kick_n_Hat.mp3", // Kick
+    "https://s3.amazonaws.com/freecodecamp/drums/RP4_KICK_1.mp3", // Deep Bass
+    "https://s3.amazonaws.com/freecodecamp/drums/Cev_H2.mp3", // Closed Hi-hat
+    "https://s3.amazonaws.com/freecodecamp/drums/Chord_1.mp3", // Electronic Hit
+    "https://s3.amazonaws.com/freecodecamp/drums/Chord_2.mp3", // Electronic Hit 2
+    "https://s3.amazonaws.com/freecodecamp/drums/Chord_3.mp3", // Electronic Hit 3
+    "https://s3.amazonaws.com/freecodecamp/drums/Give_us_a_light.mp3", // Light Percussion
+    "https://s3.amazonaws.com/freecodecamp/drums/Dry_Ohh.mp3", // Dry Open Hi-hat
+    "https://s3.amazonaws.com/freecodecamp/drums/Bld_H1.mp3", // Low Bass Hit
+    "https://s3.amazonaws.com/freecodecamp/drums/punchy_kick_1.mp3", // Punchy Kick
+    "https://s3.amazonaws.com/freecodecamp/drums/side_stick_1.mp3", // Side Stick Hit
+    "https://s3.amazonaws.com/freecodecamp/drums/Brk_Snr.mp3", // Break Snare
+    "https://s3.amazonaws.com/freecodecamp/drums/Heater-2.mp3", // Bass Guitar Sample 1
+    "https://s3.amazonaws.com/freecodecamp/drums/RP4_KICK_1.mp3", // Bass Guitar Sample 2
+    "https://s3.amazonaws.com/freecodecamp/drums/Bld_H1.mp3" // Bass Guitar Sample 3
+];
+
+        const formulaElement = document.getElementById('formula');
+        let cycleCount = 0; // Track the number of cycles
+        const maxCycles = 20; // Restart after 20 cycles
+
+        function playDrumSounds(randomIndices) {
+            randomIndices.forEach((index, i) => {
+                const audio = new Audio(drumSounds[index]);
+                setTimeout(() => audio.play(), Math.random() * 9000); // Play within 1-9 seconds
+            });
+        }
+
+        const data = {
+            nodes: [
+                { id: 'Bitcoin', group: 'crypto' },
+                { id: 'Ethereum', group: 'crypto' },
+                { id: 'XRP', group: 'crypto' },
+                { id: 'Litecoin', group: 'crypto' },
+                { id: 'Tether', group: 'crypto' },
+                { id: 'Dogecoin', group: 'crypto' },
+                { id: 'Binance Coin', group: 'crypto' },
+                { id: 'Coinbase', group: 'business' },
+                { id: 'PayPal', group: 'business' },
+                { id: 'DOGE', group: 'business' },
+                { id: 'Tesla', group: 'business' },
+                { id: 'Elon Musk', group: 'political' },
+                { id: 'Pete Hegseth', group: 'political' },
+                { id: 'Donald Trump', group: 'political' },
+                { id: 'Cash Patel', group: 'political' },
+                { id: 'Dan Bongino', group: 'political' },
+                { id: 'JD Vance', group: 'political' },
+                { id: 'One America', group: 'political' },
+                { id: 'Sinclair Media', group: 'political' },
+                { id: 'Steve Bannon', group: 'political' }
+            ],
+            links: []
+        };
+
+        const simulation = d3.forceSimulation(data.nodes)
+            .force('link', d3.forceLink(data.links).id(d => d.id).distance(100))
+            .force('charge', d3.forceManyBody().strength(-300))
+            .force('center', d3.forceCenter(width / 2, height / 2));
+
+        let link = svg.append("g").selectAll("line");
+
+        const node = svg.append("g")
+            .selectAll("circle")
+            .data(data.nodes)
+            .enter().append("circle")
+            .attr("class", "node")
+            .attr("r", 7);
+
+        const label = svg.append("g")
+            .selectAll("text")
+            .data(data.nodes)
+            .enter().append("text")
+            .text(d => d.id);
+
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => d.source?.x || 0)
+                .attr("y1", d => d.source?.y || 0)
+                .attr("x2", d => d.target?.x || 0)
+                .attr("y2", d => d.target?.y || 0);
+
+            node
+                .attr("cx", d => d.x = Math.max(10, Math.min(width - 10, d.x)))
+                .attr("cy", d => d.y = Math.max(10, Math.min(height - 10, d.y)));
+
+            label
+                .attr("x", d => d.x)
+                .attr("y", d => d.y - 10);
+        });
+
+        function updateNodesAndLinks() {
+            // Increment cycle count
+            cycleCount++;
+            if (cycleCount >= maxCycles) {
+                cycleCount = 0; // Reset counter
+                restartSimulation();
+                return;
+            }
+
+            // Random links between nodes
+            data.links = [];
+            const numLinks = Math.floor(Math.random() * 20) + 1; // Between 1 and 20 links
+            for (let i = 0; i < numLinks; i++) {
+                const source = data.nodes[Math.floor(Math.random() * data.nodes.length)];
+                const target = data.nodes[Math.floor(Math.random() * data.nodes.length)];
+                if (source !== target) {
+                    data.links.push({ source: source.id, target: target.id });
+                }
+            }
+
+            link = link.data(data.links);
+            link.exit().remove();
+            link = link.enter().append("line").attr("class", "link").merge(link);
+            simulation.force("link", d3.forceLink(data.links).id(d => d.id).distance(100));
+
+            // Random blinking nodes and synchronized drum sounds
+            node.classed("blink", false);
+            const numNodesToBlink = Math.min(numLinks, 20); // Max out at 20 nodes
+            const randomNodes = d3.shuffle(node.nodes()).slice(0, numNodesToBlink);
+            const soundIndices = randomNodes.map(() => Math.floor(Math.random() * drumSounds.length));
+            playDrumSounds(soundIndices);
+            randomNodes.forEach(n => d3.select(n).classed("blink", true));
+
+            // Update the formula
+            const earnings = (numNodesToBlink * Math.random() * 1000).toFixed(2);
+            const multiplier = (Math.random() * 10).toFixed(2);
+            formulaElement.textContent = `Earnings = (Nodes: ${numNodesToBlink}) * $${multiplier} = $${(earnings * multiplier).toFixed(2)}`;
+
+            simulation.alpha(0.3).restart();
+        }
+
+        function restartSimulation() {
+            data.links = [];
+            updateNodesAndLinks();
+        }
+
+        setInterval(updateNodesAndLinks, 10000); // Every 10 seconds
+    </script>
+</body>
+</html>

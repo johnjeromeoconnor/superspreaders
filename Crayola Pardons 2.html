@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proclamation Redactor</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+        
+        body {
+            font-family: 'EB Garamond', serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f7f2; /* Off-white background */
+            transition: background-color 1s ease;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            font-family: 'EB Garamond', serif;
+            font-weight: 500;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            background-color: #f8f7f2; /* Off-white background */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        #displayArea {
+            position: relative;
+            background-color: #fffef9; /* Slightly different off-white for contrast */
+            padding: 20px;
+            border: 1px solid #e0ddd3;
+            border-radius: 4px;
+            min-height: 200px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            overflow: hidden;
+            font-size: 18px;
+            font-family: 'EB Garamond', serif;
+            color: #333;
+        }
+
+        .redacted {
+            position: relative;
+            display: inline-block;
+            color: black; /* Text is visible by default */
+            border-radius: 2px;
+            margin: 0 1px;
+        }
+
+        .redaction-block {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 2px;
+            transition: opacity 1.5s ease;
+            /* Start with opacity 0 so text is initially visible */
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div id="displayArea"></div>
+    </div>
+
+    <script>
+        const displayArea = document.getElementById('displayArea');
+        
+        let wordsToRedact = [];
+        let redactBlocks = [];
+        let remainingIndexes = [];
+        let isRedacting = true; // Flag to track if we're redacting or unredacting
+        
+        // Enhanced color palette including black and white
+        let colors = [
+            '#FF5252', '#FF4081', '#E040FB', '#7C4DFF', 
+            '#536DFE', '#448AFF', '#40C4FF', '#18FFFF', 
+            '#64FFDA', '#69F0AE', '#B2FF59', '#EEFF41', 
+            '#FFFF00', '#FFD740', '#FFAB40', '#FF6E40',
+            '#000000', '#FFFFFF' // Added black and white
+        ];
+        
+        // The specific proclamation text
+        const proclamationText = `A PROCLAMATION
+This proclamation ends a grave national injustice that has been perpetrated upon the American people over the last four years and begins a process of national reconciliation.
+Acting pursuant to the grant of authority in Article II, Section 2, of the Constitution of the United States, I do hereby:
+(a)  commute the sentences of the following individuals convicted of offenses related to events that occurred at or near the United States Capitol on January 6, 2021, to time served as of January 20, 2025: 
+•    Stewart Rhodes
+•    Kelly Meggs
+•    Kenneth Harrelson
+•    Thomas Caldwell
+•    Jessica Watkins
+•    Roberto Minuta
+•    Edward Vallejo
+•    David Moerschel
+•    Joseph Hackett
+•    Ethan Nordean
+•    Joseph Biggs
+•    Zachary Rehl
+•    Dominic Pezzola
+•    Jeremy Bertino
+(b)  grant a full, complete and unconditional pardon to all other individuals convicted of offenses related to events that occurred at or near the United States Capitol on January 6, 2021;
+The Attorney General shall administer and effectuate the immediate issuance of certificates of pardon to all individuals described in section (b) above, and shall ensure that all individuals convicted of offenses related to events that occurred at or near the United States Capitol on January 6, 2021, who are currently held in prison are released immediately.  The Bureau of Prisons shall immediately implement all instructions from the Department of Justice regarding this directive.
+I further direct the Attorney General to pursue dismissal with prejudice to the government of all pending indictments against individuals for their conduct related to the events at or near the United States Capitol on January 6, 2021.  The Bureau of Prisons shall immediately implement all instructions from the Department of Justice regarding this directive.
+     IN WITNESS WHEREOF, I have hereunto set my hand this
+twentieth day of January, in the year of our Lord two thousand twenty-five, and of the Independence of the United States of America the two hundred and forty-ninth.`;
+        
+        function getRandomColor() {
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        // Fisher-Yates shuffle algorithm
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        
+        function processDocument() {
+            displayArea.innerHTML = '';
+            wordsToRedact = [];
+            redactBlocks = [];
+            
+            // Process text and create spans for each word
+            const words = proclamationText.split(/(\s+)/);
+            
+            words.forEach(word => {
+                if (word.trim() === '') {
+                    // This is whitespace, just add it directly
+                    const spaceSpan = document.createElement('span');
+                    spaceSpan.textContent = word;
+                    displayArea.appendChild(spaceSpan);
+                } else {
+                    // This is a word, create a redactable span
+                    const wordSpan = document.createElement('span');
+                    wordSpan.textContent = word;
+                    wordSpan.classList.add('redacted');
+                    displayArea.appendChild(wordSpan);
+                    wordsToRedact.push(wordSpan);
+                    
+                    // Create redaction block with initial opacity 0
+                    const redactionBlock = document.createElement('div');
+                    redactionBlock.classList.add('redaction-block');
+                    redactionBlock.style.backgroundColor = getRandomColor();
+                    redactionBlock.style.opacity = "0"; // Start transparent
+                    wordSpan.appendChild(redactionBlock);
+                    redactBlocks.push(redactionBlock);
+                }
+            });
+            
+            // Create array of indexes and shuffle them
+            remainingIndexes = Array.from(Array(redactBlocks.length).keys());
+            shuffleArray(remainingIndexes);
+        }
+        
+        function startRedaction() {
+            // Much slower speed for a very gradual effect (8 minute cycle)
+            const speed = 2100; // milliseconds between each word redaction
+            isRedacting = true;
+            
+            const redactionInterval = setInterval(() => {
+                if (isRedacting) {
+                    // Redacting phase
+                    if (remainingIndexes.length > 0) {
+                        // Get a random index from our shuffled array
+                        const randomIndex = remainingIndexes.pop();
+                        
+                        // Fade in the redaction block
+                        redactBlocks[randomIndex].style.opacity = "1";
+                    } else {
+                        // Switch to unredacting phase after a brief pause
+                        isRedacting = false;
+                        // Reshuffle for unredaction (different order)
+                        remainingIndexes = Array.from(Array(redactBlocks.length).keys());
+                        shuffleArray(remainingIndexes);
+                        
+                        setTimeout(() => {
+                            // Start unredacting
+                            startUnredacting();
+                        }, 3000);
+                        clearInterval(redactionInterval);
+                    }
+                }
+            }, speed);
+        }
+        
+        function startUnredacting() {
+            // Very slow unredaction for dramatic effect (8 minute cycle)
+            const speed = 2100; // milliseconds between each word unredaction
+            
+            const unredactInterval = setInterval(() => {
+                if (remainingIndexes.length > 0) {
+                    // Get a random index from our shuffled array
+                    const randomIndex = remainingIndexes.pop();
+                    
+                    // Fade out the redaction block
+                    redactBlocks[randomIndex].style.opacity = '0';
+                } else {
+                    clearInterval(unredactInterval);
+                    // Restart the whole process after a pause
+                    setTimeout(() => {
+                        // Reshuffle for next redaction cycle
+                        remainingIndexes = Array.from(Array(redactBlocks.length).keys());
+                        shuffleArray(remainingIndexes);
+                        isRedacting = true;
+                        startRedaction();
+                    }, 10000); // 10-second pause before restarting
+                }
+            }, speed);
+        }
+        
+        // Initialize and start automatically
+        window.onload = function() {
+            processDocument();
+            // Start redaction process after a short delay
+            setTimeout(startRedaction, 1500);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Declaration Words & Crypto Prices</title>
+    <style>
+        body {
+            background-color: white;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+        }
+        .word {
+            position: absolute;
+            font-size: 24px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .crypto {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        const declarationWords = [
+            "When", "in", "the", "Course", "of", "human", "events", "it", "becomes", "necessary",
+            "for", "one", "people", "to", "dissolve", "the", "political", "bands", "which", "have",
+            "connected", "them", "with", "another", "and", "to", "assume", "among", "the", "powers",
+            "of", "the", "earth", "a", "separate", "and", "equal", "station", "to", "which"
+        ];
+
+        const cryptoPrices = ["$42,000", "$51,250", "$38,900", "$45,700", "$49,300", "$39,850", "$47,120"];
+
+        function showRandomWord() {
+            const word = document.createElement("div");
+            word.classList.add("word");
+            word.textContent = declarationWords[Math.floor(Math.random() * declarationWords.length)];
+            document.body.appendChild(word);
+
+            // Random position
+            word.style.left = Math.random() * (window.innerWidth - 100) + "px";
+            word.style.top = Math.random() * (window.innerHeight - 50) + "px";
+
+            setTimeout(() => {
+                word.classList.add("crypto");
+                word.textContent = cryptoPrices[Math.floor(Math.random() * cryptoPrices.length)];
+            }, 1000);
+
+            setTimeout(() => {
+                word.remove();
+            }, 2000);
+        }
+
+        setInterval(showRandomWord, 800);
+    </script>
+</body>
+</html>
