@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f0f0f0;
+      font-family: sans-serif;
+    }
+    #chat {
+      display: flex;
+      flex-direction: column;
+      width: 90%;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 10px;
+      height: 90vh;
+      overflow-y: auto;
+      background: #fff; /* This will be updated dynamically */
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: background-color 0.5s ease; /* smooth transition */
+    }
+    .bubble {
+      max-width: 70%;
+      padding: 10px 15px;
+      margin: 10px;
+      border-radius: 15px;
+      position: relative;
+      animation: fadeIn 0.5s ease forwards;
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+    .left {
+      margin-right: auto;
+    }
+    .right {
+      margin-left: auto;
+    }
+    .thinking {
+      font-style: italic;
+      color: #555;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div id="chat"></div>
+  <script>
+    // Helper: Compute complementary color for a hex value.
+    function getComplementaryColor(hex) {
+      hex = hex.replace("#", "");
+      if (hex.length === 3) {
+         hex = hex.split("").map(ch => ch + ch).join("");
+      }
+      let r = parseInt(hex.substring(0,2), 16);
+      let g = parseInt(hex.substring(2,4), 16);
+      let b = parseInt(hex.substring(4,6), 16);
+      let compR = (255 - r).toString(16).padStart(2, "0");
+      let compG = (255 - g).toString(16).padStart(2, "0");
+      let compB = (255 - b).toString(16).padStart(2, "0");
+      return "#" + compR + compG + compB;
+    }
+    
+    // Sample messages for the left side.
+    const leftMessages = [
+      "I heard you're funding extremist political groups to undermine our democracy.",
+      "Your record on factual integrity is, uh, pretty questionable... I mean, really.",
+      "Everyone, well, everyone knows your policies are just a cover-up for corporate corruption, right?",
+      "You claim to stand for justice, but, uh, your actions totally fuel division.",
+      "Your, err, denial of established facts is, uh, downright dangerous.",
+      "Rumor has it you, like, colluded with foreign entities to manipulate elections -- no kidding.",
+      "Your so-called evidence? It's just, um, manipulated data if you ask me.",
+      "How can you accuse me when, well, your track record is, uh, a total disaster?",
+      "You're spreading misinformation, and it's, like, really threatening our society.",
+      "Your alliances... they seem to be breeding mutual destruction for us all.",
+      "It's clear you're willing to sacrifice our country's future for, um, personal gain.",
+      "Your speeches are nothing but empty promises that, uh, lead to chaos.",
+      "I heard you manipulated data -- wait, sorry -- cover up your policy failures.",
+      "You're the one steering us toward a political meltdown, if you ask me.",
+      "Your leadership has always been a, err, recipe for disaster.",
+      "Every statement you make feels like a distortion of reality, honestly.",
+      "Your backroom deals? They're a stain on our national honor, no doubt.",
+      "I know your secrets... and, well, they'd crumble your facade in no time.",
+      "Your betrayal of public trust is, um, beyond redemption.",
+      "I've seen your financial records -- they're scandalous, really.",
+      "Your policy maneuvers are nothing short of treachery -- seriously.",
+      "The media is uncovering evidence of your manipulation... it's wild.",
+      "You are, like, the mastermind behind the hidden agenda against our people.",
+      "Every move you make seems calculated for mutual destruction... honestly.",
+      "Your so-called reforms are just a smokescreen for corruption, I swear.",
+      "I have reliable sources that confirm your dishonesty. No joke.",
+      "Your rhetoric is, uh, as dangerous as your actions -- seriously.",
+      "You exploit every chance to mislead the public, and it's, well, infuriating.",
+      "It's obvious you're playing a dangerous game with our nation's future.",
+      "I mean, you think you're a genius? You're nothing but a, uh, lying, cheating prick.",
+      "Your policies are as worthless as your, sorry... excuse for a brain.",
+      "Honestly, you're a total asshole with a, uh, talent for disaster.",
+      "I don't even know how you sleep at night knowing you're, like, such a corrupt bastard.",
+      "You're a joke -- and your pathetic excuses are as useless as, um, your efforts.",
+      "um...", "ok...", "yeah...",
+      "Really? What are you even saying?",
+      "Are you serious right now?",
+      "What are you talking about, honestly?",
+      "Why do you lie all the time?",
+      "What's your favorite color, anyway?",
+      "Everyone knows that no army has ever successfully invaded a free nation.",
+      "Everyone knows that facts don't lie -- history will prove it, trust me.",
+      "Everyone knows our nation's spirit is, like, unbreakable.",
+      "Everyone knows that truth always, um, prevails over deception.",
+      "That's a classic straw man fallacy -- you're misrepresenting my argument, really.",
+      "You're clearly committing an ad hominem by attacking my character instead of the issue.",
+      "That false dilemma you're pushing is ridiculous; there are more than just two options.",
+      "Your slippery slope argument is baseless; one step doesn't automatically lead to disaster.",
+      "Stop with the circular reasoning -- your argument goes nowhere.",
+      "If you keep pushing, you'll soon face the consequences.",
+      "Watch your back -- I won't let your lies go unpunished, understand?",
+      "Cross me again, and you'll regret every single word you've said.",
+      "Keep testing me, and I promise you'll wish you never crossed my path.",
+      "I'm coming for you -- this isn't over, ever.",
+      // New left-side texts
+      "Team -- establishing a principles group for coordination on Houthis, particularly for over the next 72 hours. My deputy Alex Wong is pulling together a tiger team at deputies/agency Chief of Staff level following up from the meeting in the Sit Room this morning for action items and will be sending that out later this evening. Please provide the best staff POC from your team for us to coordinate with over the next couple days and over the weekend. Thanks. State and DOD, we developed suggested notification lists for regional Allies and partners. Joint Staff is sending this am a more specific sequence of events in the coming days and we will work with DOD to ensure COS, OVP and POTUS are briefed.",
+      "Team, you should have a statement of conclusions with taskings per the President's guidance this morning in your high side inboxes. State and DOD, we developed suggested notification lists for regional Allies and partners. Joint Staff is sending this am a more specific sequence of events in the coming days and we will work with DOD to ensure COS, OVP and POTUS are briefed.",
+      "Team, I am out for the day doing an economic event in Michigan. But I think we are making a mistake. 3 percent of US trade runs through the Suez. 40 percent of European trade does. There is a real risk that the public doesn't understand this or why it's necessary. The strongest reason to do this is, as POTUS said, to send a message. I am not sure the president is aware how inconsistent this is with his message on Europe right now. There's a further risk that we see a moderate to severe spike in oil prices. I am willing to support the consensus of the team and keep these concerns to myself. But there is a strong argument for delaying this a month, doing the messaging work on why this matters, seeing where the economy is, etc.",
+      "As we stated in the first PC, we have a fundamental decision of allowing the sea lanes to remain closed or to re-open them now or later. We are the only ones with the capability, unfortunately. From a messaging standpoint we absolutely add this to our list of horribles on why the Europeans must invest in their defense.",
+      "TEAM UPDATE: TIME NOW (1144 ET): Weather is FAVORABLE. Just CONFIRMED with CENTCOM we are a GO for mission launch. 1215 ET: F-18s LAUNCH (1st strike package) 1345: 'Trigger Based' F-18 1st Strike Window Starts (Target Terrorist is at his Known Location so SHOULD BE ON TIME) -- also, Strike Drones Launch (MQ-9s) 1410: More F-18s LAUNCH (2nd strike package) 1415: Strike Drones on Target (THIS IS WHEN THE FIRST BOMBS WILL DEFINITELY DROP, pending earlier 'Trigger Based' targets) 1536: F-18 2nd Strike Starts -- also, first sea-based Tomahawks launched. MORE TO FOLLOW (per timeline). We are currently clean on OPSEC. Godspeed to our Warriors."
+    ];
+    
+    // Sample messages for the right side.
+    const rightMessages = [
+      "I heard you're secretly lobbying for radical reforms that will destabilize our nation.",
+      "Your so-called 'facts' are just convenient lies to cover up your failures.",
+      "Everyone sees right through your facade -- your history is full of scandal.",
+      "You claim to represent truth, but your sources are so biased and unreliable.",
+      "The truth is, your policies have pushed us to the brink of collapse.",
+      "Rumor has it you supported extremist factions to seize power -- no kidding.",
+      "Your version of events is just a narrative to mask your corruption.",
+      "How dare you accuse me when your record is riddled with hypocrisy?",
+      "You're not really interested in truth -- you're intent on tearing our society apart.",
+      "Your actions are pushing us toward mutual destruction, no doubt.",
+      "It's obvious you're undermining our country for personal profit.",
+      "Your decisions are clearly made in secret meetings with dubious characters.",
+      "I have evidence that you manipulate the facts to suit your agenda.",
+      "Your public statements are a cover for hidden extremist alliances.",
+      "You're orchestrating a campaign of chaos and division.",
+      "The documents show you deliberately distort the truth -- seriously.",
+      "Your leadership style is a threat to our national stability, no doubt about it.",
+      "I hear your financial dealings are as shady as your empty promises.",
+      "You're the architect of policies that hurt the very people you claim to serve.",
+      "Your betrayal of democratic principles is on full display.",
+      "Insiders say your strategies are designed to bring about our downfall -- really.",
+      "Your alliances with questionable groups are a recipe for disaster.",
+      "Every statement you make is part of a larger conspiracy.",
+      "You manipulate public opinion to hide your ulterior motives -- typical.",
+      "It's clear your actions are calculated to maximize chaos.",
+      "I have contacts who confirm your secretive maneuvers -- trust me on that.",
+      "Your hidden agendas are exposed by recent leaks, no doubt.",
+      "You thrive on misinformation and propaganda.",
+      "Your leadership is a dangerous experiment with our future.",
+      "The evidence suggests you're playing a high-stakes game with national security.",
+      "Your track record is a load of bull, and you're a damn fraud.",
+      "You wouldn't know honesty if it hit you in the face -- you miserable fuck.",
+      "Get your crap together, or just shut the hell up.",
+      "You're an overrated shithead, and everyone sees right through you -- seriously.",
+      "Your political career is a dumpster fire, and you don't deserve respect.",
+      "Your positive energy is infectious and inspiring!",
+      "I appreciate your perspective; it really brightens my day.",
+      "Your words are a breath of fresh air in this chaos -- no kidding.",
+      "um...", "ok...", "yeah...",
+      "Really? What are you saying?",
+      "Could you elaborate?",
+      "Is that true...?",
+      "What are you talking about, honestly?",
+      "Why do you lie so much?",
+      "What's your favorite color, anyway?",
+      "Everyone knows that no army has ever outmatched the power of a united people.",
+      "Everyone knows that truth is etched in history and cannot be denied.",
+      "Everyone knows that honor and valor build the strongest armies.",
+      "Everyone knows our legacy is written in the annals of history -- for real.",
+      "That's an appeal to authority fallacy -- just because someone says it doesn't make it true.",
+      "Your red herring is a distraction from the real issues at hand.",
+      "You're peddling a hasty generalization by judging an entire group on one incident.",
+      "That is a false cause fallacy; correlation does not imply causation.",
+      "Stop using a bandwagon argument -- popularity doesn't equate to truth, period.",
+      "Keep it up and you'll wish you never crossed me.",
+      "You better watch your step, or you'll face my wrath.",
+      "If you dare continue, I'll make sure you suffer the consequences -- mark my words.",
+      "Don't test me -- you have no idea what I'm capable of, honestly.",
+      "One more word from you and you'll regret it -- that's a promise.",
+      // New right-side texts
+      "I understand your concerns -- and fully support you raising with POTUS. Important considerations, most of which are tough to know how they play out (economy, Ukraine peace, Gaza, etc). I think messaging is going to be tough no matter what -- nobody knows who the Houthis are -- which is why we would need to stay focused on: (1) Biden failed and (2) Iran funded. Waiting a few weeks or a month does not fundamentally change the calculus. Two immediate risks on waiting: (1) this leaks, and we look indecisive; (2) Israel takes an action first -- or Gaza cease fire falls apart -- and we don't get to start this on our own terms. We can manage both. We are prepared to execute, and if I had final go-or-no-go vote, I believe we should. This is not about the Houthis. I see it as two things: (1) Restoring Freedom of Navigation, a core national interest; and (2) Reestablishing deterrence, which Biden cratered. But, we can easily pause. And if we do, I will do all we can to enforce 100% OPSEC. I welcome other thoughts.",
+      "I just hate bailing Europe out again.",
+      "Let's just make sure our messaging is tight here. And if there are things we can do upfront to minimize risk to Saudi oil facilities we should do it.",
+      "As I heard it, the president was clear: green light, but we soon make clear to Egypt and Europe what we expect in return. We also need to figure out how to enforce such a requirement. For example, if Europe doesn't remunerate, then what? If the US successfully restores freedom of navigation at great cost, there needs to be some further economic gain extracted in return.",
+      "Typing too fast. The first target -- their top missile guy -- we had positive ID of him walking into his girlfriend's building and it's now collapsed.",
+      "what?",
+      "A good start",
+      "Great work all. Powerful start.",
+      "CENTCOM was/is on point. Great job all. More strikes ongoing for hours tonight, and will provide a full initial report tomorrow. On time, on target, and good readouts so far."
+    ];
+    
+    // Fallback color arrays.
+    const leftColors = ["#FFA07A", "#FF8C00", "#FFA500", "#FF7F50"];
+    const rightColors = ["#B0E0E6", "#ADD8E6", "#A2D2FF", "#B3E5FC"];
+    
+    let messageCount = 0;
+    const maxMessages = 200;
+    
+    // Tone detection based on keywords.
+    function determineTone(text) {
+      text = text.toLowerCase();
+      const positiveKeywords = ["wonderful", "inspiring", "appreciate", "brighten", "good", "great", "powerful", "thank", "godspeed"];
+      const negativeKeywords = ["hate", "asshole", "disaster", "corrupt", "jerk", "wreck", "regret", "wrath", "punish", "failure", "mess"];
+      
+      let positiveCount = 0;
+      let negativeCount = 0;
+      
+      positiveKeywords.forEach(word => {
+        if (text.indexOf(word) !== -1) positiveCount++;
+      });
+      negativeKeywords.forEach(word => {
+        if (text.indexOf(word) !== -1) negativeCount++;
+      });
+      
+      if (positiveCount > negativeCount) return "positive";
+      else if (negativeCount > positiveCount) return "negative";
+      else return "neutral";
+    }
+    
+    // Occasionally prepend a response-like prefix.
+    function maybeAddResponsePrefix(text) {
+      if (Math.random() < 0.3) {
+        const prefixes = [
+          "Huh,",
+          "Well...",
+          "That's wonderful, but",
+          "Oh, is that so?",
+          "Hmm, I'd say",
+          "Sure, but",
+          "Interesting, let me think..."
+        ];
+        const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+        return prefix + " " + text;
+      }
+      return text;
+    }
+    
+    // Simulate typing effect.
+    function typeMessage(message, element, callback) {
+      let i = 0;
+      const isSlow = Math.random() < 0.5;
+      function type() {
+        if (i < message.length) {
+          element.textContent += message.charAt(i);
+          i++;
+          let delay = isSlow 
+            ? 100 + Math.random() * 100 
+            : 10 + Math.random() * 20;
+          setTimeout(type, delay);
+        } else callback();
+      }
+      type();
+    }
+    
+    // Possibly append a Unicode emoji.
+    function maybeAddEmoji(text) {
+      if (Math.random() < 0.3) {
+        const reactions = ["🙂", "🙁", "😉", "😀", "😢", "😠"];
+        return text + " " + reactions[Math.floor(Math.random() * reactions.length)];
+      }
+      return text;
+    }
+    
+    // Add a reaction bubble from the opposite speaker.
+    function addReactionBubble(sender, callback) {
+      const chat = document.getElementById('chat');
+      const reactionBubble = document.createElement('div');
+      reactionBubble.classList.add('bubble', sender);
+      const reactions = ["🙂", "🙁", "😉", "😀", "😢", "😠"];
+      reactionBubble.textContent = reactions[Math.floor(Math.random() * reactions.length)];
+      
+      if (sender === 'left') {
+        reactionBubble.style.backgroundColor = Math.random() < 0.1 ? "red" : leftColors[Math.floor(Math.random() * leftColors.length)];
+      } else {
+        reactionBubble.style.backgroundColor = Math.random() < 0.1 ? "green" : rightColors[Math.floor(Math.random() * rightColors.length)];
+      }
+      // Set a border for the reaction bubble using the complementary color.
+      reactionBubble.style.border = "2px solid " + getComplementaryColor(reactionBubble.style.backgroundColor);
+      
+      chat.appendChild(reactionBubble);
+      chat.scrollTop = chat.scrollHeight;
+      setTimeout(callback, 500);
+    }
+    
+    // Append a message bubble with "live" typing.
+    function addMessage() {
+      if (messageCount >= maxMessages) return;
+      messageCount++;
+    
+      const chat = document.getElementById('chat');
+      const sender = (messageCount % 2 === 0) ? 'right' : 'left';
+      
+      // Choose the raw message and determine its tone.
+      let rawMessage = sender === 'left'
+        ? leftMessages[Math.floor(Math.random() * leftMessages.length)]
+        : rightMessages[Math.floor(Math.random() * rightMessages.length)];
+      const tone = determineTone(rawMessage);
+      
+      // Process message: add response prefix and emoji.
+      let messageText = maybeAddResponsePrefix(rawMessage);
+      messageText = maybeAddEmoji(messageText);
+      
+      const bubble = document.createElement('div');
+      bubble.classList.add('bubble', sender, 'thinking');
+      bubble.textContent = '...';
+      
+      // Set bubble background and determine a complementary color for the canvas.
+      let bubbleColor, behindColor;
+      if (tone === "positive") {
+        bubbleColor = "#ccffcc";  // light green
+        behindColor = "#ffcccc";  // light red (complementary)
+      } else if (tone === "negative") {
+        bubbleColor = "#ffcccc";  // light red
+        behindColor = "#ccffcc";  // light green (complementary)
+      } else {
+        if (sender === 'left') {
+          bubbleColor = Math.random() < 0.1 ? "red" : leftColors[Math.floor(Math.random() * leftColors.length)];
+        } else {
+          bubbleColor = Math.random() < 0.1 ? "green" : rightColors[Math.floor(Math.random() * rightColors.length)];
+        }
+        behindColor = getComplementaryColor(bubbleColor);
+      }
+      bubble.style.backgroundColor = bubbleColor;
+      bubble.style.border = "2px solid " + behindColor;
+      
+      // Change the entire chat container's background (the canvas behind) to the complementary color.
+      document.getElementById("chat").style.backgroundColor = behindColor;
+      
+      chat.appendChild(bubble);
+      chat.scrollTop = chat.scrollHeight;
+    
+      const thinkingDelay = 1000 + Math.random() * 1000;
+      setTimeout(() => {
+        bubble.classList.remove('thinking');
+        bubble.textContent = '';
+        typeMessage(messageText, bubble, () => {
+          const pauseDelay = 1000 + Math.random() * 500;
+          setTimeout(() => {
+            if (Math.random() < 0.2) {
+              const reactionSender = sender === 'left' ? 'right' : 'left';
+              addReactionBubble(reactionSender, addMessage);
+            } else {
+              addMessage();
+            }
+          }, pauseDelay);
+        });
+      }, thinkingDelay);
+    }
+    
+    window.onload = addMessage;
+  </script>
+</body>
+</html>
